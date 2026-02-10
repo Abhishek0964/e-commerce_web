@@ -1,24 +1,53 @@
 {
+    "locked": true,
     "mcpServers": {
-        "context7": {
+        "github-mcp-server": {
             "command": "npx",
             "args": [
                 "-y",
-                "@upstash/context7-mcp",
-                "--api-key",
-                "YOUR_API_KEY"
-            ]
+                "@modelcontextprotocol/server-github"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+            }
         },
-        "shadcn": {
+        "supabase-mcp-server": {
             "command": "npx",
             "args": [
-                "shadcn@latest",
-                "mcp"
+                "-y",
+                "@supabase/mcp-server-supabase"
+            ],
+            "env": {
+                "SUPABASE_URL": "${SUPABASE_URL}",
+                "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}"
+            }
+        },
+        "meilisearch": {
+            "command": "uvx",
+            "args": [
+                "meilisearch-mcp"
+            ],
+            "env": {
+                "MEILI_HTTP_ADDR": "${MEILI_HOST}",
+                "MEILI_MASTER_KEY": "${MEILI_MASTER_KEY}"
+            }
+        },
+        "playwright": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@playwright/mcp"
             ]
+        },
+        "figma": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@yhy2001/figma-mcp-server"
+            ],
+            "env": {
+                "FIGMA_ACCESS_TOKEN": "${FIGMA_ACCESS_TOKEN}"
+            }
         }
-        //other mcp servers
     }
 }
-
-// setup mcp server in  ~/.gemini\antigravity\mcp_config.json
-
