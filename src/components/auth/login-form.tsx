@@ -22,7 +22,7 @@ export function LoginForm() {
     const [loading, setLoading] = React.useState(false);
     const router = useRouter();
     const searchParams = useSearchParams();
-    const returnTo = searchParams.get('returnTo') || '/';
+    const returnTo = searchParams?.get('returnTo') || '/';
     const { supabase, signInWithGoogle } = useAuth();
 
     const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
