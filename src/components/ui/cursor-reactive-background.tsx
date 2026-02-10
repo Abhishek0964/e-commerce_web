@@ -1,110 +1,158 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
-export function CursorReactiveBackground() {
+interface TrailPoint {
+    x: number;
+    y: number;
+    alpha: number;
+    radius: number;
+}
+
+export function CursorTrailBackground() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const trailRef = useRef<TrailPoint[]>([]);
+    const animFrame = useRef<number>(0);
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
 
-    // Smooth spring animation for cursor position
-    const springConfig = { damping: 25, stiffness: 100 };
-    const smoothX = useSpring(mouseX, springConfig);
-    const smoothY = useSpring(mouseY, springConfig);
+    const springX = useSpring(mouseX, { damping: 20, stiffness: 150, mass: 0.5 });
+    const springY = useSpring(mouseY, { damping: 20, stiffness: 150, mass: 0.5 });
 
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            mouseX.set(e.clientX);
-            mouseY.set(e.clientY);
-        };
+    const draw = useCallback(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
-    }, [mouseX, mouseY]);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw trail
+        const trail = trailRef.current;
+        for (let i = trail.length - 1; i >= 0; i--) {
+            const p = trail[i];
+            if (!p) continue;
+            p.alpha -= 0.012;
+            p.radius += 0.3;
+
+            if (p.alpha <= 0) {
+                trail.splice(i, 1);
+                continue;
+            }
+
+            // Amazon orange glow trail
+            const gradient = ctx.createRadialGradient(
+                p.x, p.y, 0,
+                p.x, p.y, p.radius
+            );
+            gradient.addColorStop(0, `rgba(255, 153, 0, ${p.alpha * 0.3})`);
+            gradient.addColorStop(0.5, `rgba(255, 153, 0, ${p.alpha * 0.1})`);
+            gradient.addColorStop(1, 'rgba(255, 153, 0, 0)');
+
+            ctx.beginPath();
+            ctx.fillStyle = gradient;
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw main cursor glow
+        const cx = springX.get();
+        const cy = springY.get();
+
+        if (cx > 0 && cy > 0) {
+            const mainGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 180);
+            mainGlow.addColorStop(0, 'rgba(255, 153, 0, 0.08)');
+            mainGlow.addColorStop(0.4, 'rgba(0, 113, 133, 0.04)');
+            mainGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.beginPath();
+            ctx.fillStyle = mainGlow;
+            ctx.arc(cx, cy, 180, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        animFrame.current = requestAnimationFrame(draw);
+    }, [springX, springY]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Set canvas size
         const resize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         };
-        resize();
-        window.addEventListener('resize', resize);
 
-        // Gradient animation
-        let frame = 0;
-        const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const handleMouse = (e: MouseEvent) => {
+            mouseX.set(e.clientX);
+            mouseY.set(e.clientY);
 
-            // Create radial gradient following cursor
-            const gradient = ctx.createRadialGradient(
-                smoothX.get(),
-                smoothY.get(),
-                0,
-                smoothX.get(),
-                smoothY.get(),
-                Math.max(canvas.width, canvas.height) * 0.6
-            );
+            // Add trail point
+            trailRef.current.push({
+                x: e.clientX,
+                y: e.clientY,
+                alpha: 0.6,
+                radius: 8,
+            });
 
-            // Professional blue-green gradient with subtle animation
-            const hue = (frame * 0.1) % 360;
-            gradient.addColorStop(0, `hsla(${hue + 200}, 70%, 60%, 0.15)`); // Blue center
-            gradient.addColorStop(0.5, `hsla(${hue + 160}, 60%, 50%, 0.08)`); // Green-blue mid
-            gradient.addColorStop(1, 'hsla(220, 20%, 90%, 0)'); // Transparent edge
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            frame++;
-            requestAnimationFrame(animate);
+            // Limit trail length
+            if (trailRef.current.length > 40) {
+                trailRef.current.shift();
+            }
         };
 
-        const animationId = requestAnimationFrame(animate);
+        resize();
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousemove', handleMouse);
+        animFrame.current = requestAnimationFrame(draw);
 
         return () => {
             window.removeEventListener('resize', resize);
-            cancelAnimationFrame(animationId);
+            window.removeEventListener('mousemove', handleMouse);
+            cancelAnimationFrame(animFrame.current);
         };
-    }, [smoothX, smoothY]);
+    }, [draw, mouseX, mouseY]);
 
     return (
         <>
-            {/* Canvas for cursor-reactive gradient */}
             <canvas
                 ref={canvasRef}
-                className="fixed inset-0 pointer-events-none z-0"
-                style={{ mixBlendMode: 'normal' }}
+                className="pointer-events-none fixed inset-0 z-0"
+                style={{ opacity: 0.7 }}
             />
-
-            {/* Animated gradient orbs as fallback/enhancement */}
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            {/* Ambient floating orbs */}
+            <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
                 <motion.div
-                    className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-blue-400/10 to-emerald-400/10 blur-3xl"
+                    className="absolute h-[300px] w-[300px] rounded-full"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(255,153,0,0.06) 0%, transparent 70%)',
+                        top: '20%',
+                        right: '10%',
+                    }}
                     animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.3, 0.5, 0.3],
+                        y: [0, -20, 0],
+                        scale: [1, 1.1, 1],
                     }}
                     transition={{
-                        duration: 8,
+                        duration: 6,
                         repeat: Infinity,
                         ease: 'easeInOut',
                     }}
                 />
                 <motion.div
-                    className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-emerald-400/10 to-blue-400/10 blur-3xl"
+                    className="absolute h-[250px] w-[250px] rounded-full"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(0,113,133,0.05) 0%, transparent 70%)',
+                        bottom: '15%',
+                        left: '5%',
+                    }}
                     animate={{
-                        scale: [1.2, 1, 1.2],
-                        opacity: [0.5, 0.3, 0.5],
+                        y: [0, 15, 0],
+                        scale: [1, 1.05, 1],
                     }}
                     transition={{
-                        duration: 10,
+                        duration: 8,
                         repeat: Infinity,
                         ease: 'easeInOut',
                     }}

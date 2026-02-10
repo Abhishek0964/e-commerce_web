@@ -12,10 +12,10 @@ import {
 export function SortSelect() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const currentSort = searchParams.get('sort') || 'newest';
+    const currentSort = searchParams?.get('sort') || 'newest';
 
     const handleValueChange = (value: string) => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
         params.set('sort', value);
         // Reset to page 1 to avoid confusion
         params.set('page', '1');

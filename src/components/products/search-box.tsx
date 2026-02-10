@@ -10,14 +10,14 @@ import { useDebounce } from '@/hooks/use-debounce';
 export function SearchBox() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const initialQuery = searchParams.get('q') || '';
+    const initialQuery = searchParams?.get('q') || '';
 
     const [query, setQuery] = React.useState(initialQuery);
     const debouncedQuery = useDebounce(query, 300);
 
     // Sync URL with debounced query
     React.useEffect(() => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
 
         if (debouncedQuery) {
             params.set('q', debouncedQuery);
@@ -35,7 +35,7 @@ export function SearchBox() {
 
     const handleClear = () => {
         setQuery('');
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
         params.delete('q');
         params.set('page', '1');
         router.push(`/products?${params.toString()}`, { scroll: false });

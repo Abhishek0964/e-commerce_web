@@ -20,15 +20,15 @@ export function FiltersPanel({ categories, className }: FiltersPanelProps) {
 
     // -- State --
     // We initialize state from URL to properly reflect active filters on load
-    const activeCategory = searchParams.get('category') || 'all';
-    const minPrice = searchParams.get('min_price') || '';
-    const maxPrice = searchParams.get('max_price') || '';
-    const isFeatured = searchParams.get('is_featured') === 'true';
+    const activeCategory = searchParams?.get('category') || 'all';
+    const minPrice = searchParams?.get('min_price') || '';
+    const maxPrice = searchParams?.get('max_price') || '';
+    const isFeatured = searchParams?.get('is_featured') === 'true';
 
     // -- Handlers --
 
     const updateParam = (key: string, value: string | null) => {
-        const params = new URLSearchParams(searchParams.toString());
+        const params = new URLSearchParams(searchParams?.toString() || '');
         if (value) {
             params.set(key, value);
         } else {

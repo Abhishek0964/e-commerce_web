@@ -25,18 +25,42 @@ function ProductCard({ product }: ProductCardProps) {
     return (
         <Link href={`/products/${product.slug}`}>
             <motion.div
-                className="group relative overflow-hidden rounded-lg border bg-card transition-all duration-300 hover:shadow-xl"
+                className="group relative overflow-hidden rounded-lg border bg-card transition-colors duration-200"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.3 }}
+                whileHover={{
+                    y: -6,
+                    scale: 1.03,
+                    boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15), 0 0 25px rgba(255, 153, 0, 0.2)',
+                }}
+                transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 20,
+                }}
+                style={{
+                    boxShadow: '0 2px 5px rgba(213, 217, 217, 0.5)',
+                }}
             >
+                {/* Glow overlay on hover */}
+                <motion.div
+                    className="pointer-events-none absolute inset-0 z-10 rounded-lg"
+                    animate={{
+                        boxShadow: isHovered
+                            ? 'inset 0 0 0 2px rgba(255, 153, 0, 0.4), 0 0 30px rgba(255, 153, 0, 0.15)'
+                            : 'inset 0 0 0 0px rgba(255, 153, 0, 0), 0 0 0px rgba(255, 153, 0, 0)',
+                    }}
+                    transition={{ duration: 0.3 }}
+                />
+
                 {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden bg-muted">
                     {mainImage ? (
                         <motion.div
-                            whileHover={{ scale: 1.05 }}
-                            transition={{ duration: 0.4 }}
+                            animate={{
+                                scale: isHovered ? 1.08 : 1,
+                            }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
                             className="h-full w-full"
                         >
                             <Image
@@ -59,7 +83,7 @@ function ProductCard({ product }: ProductCardProps) {
                             <Badge variant="default">Featured</Badge>
                         )}
                         {discount > 0 && (
-                            <Badge variant="success">{discount}% OFF</Badge>
+                            <Badge className="bg-deal text-white">{discount}% OFF</Badge>
                         )}
                         {!inStock && (
                             <Badge variant="destructive">Out of Stock</Badge>
@@ -82,19 +106,19 @@ function ProductCard({ product }: ProductCardProps) {
                 <div className="space-y-2 p-4">
                     {/* Category */}
                     {product.category && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs font-medium text-accent">
                             {product.category.name}
                         </p>
                     )}
 
                     {/* Product Name */}
-                    <h3 className="line-clamp-2 font-semibold transition-colors group-hover:text-primary">
+                    <h3 className="line-clamp-2 font-semibold transition-colors group-hover:text-accent">
                         {product.name}
                     </h3>
 
                     {/* Price */}
                     <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold">
+                        <span className="text-lg font-bold text-foreground">
                             ₹{product.price.toLocaleString('en-IN')}
                         </span>
                         {product.compare_at_price && product.compare_at_price > product.price && (
@@ -106,8 +130,8 @@ function ProductCard({ product }: ProductCardProps) {
 
                     {/* Stock Status */}
                     {inStock && product.available_stock && product.available_stock <= 10 && (
-                        <p className="text-xs text-yellow-600">
-                            Only {product.available_stock} left
+                        <p className="text-xs font-medium text-deal">
+                            Only {product.available_stock} left - order soon!
                         </p>
                     )}
                 </div>

@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Heart, ShoppingCart, Eye } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'link';
+import Link from 'next/link';
 import { useState } from 'react';
 
 interface ProductCardProps {

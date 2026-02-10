@@ -50,7 +50,7 @@ export default async function HomePage() {
 
       {/* CTA Banner */}
       <section className="container mx-auto px-4 py-16">
-        <div className="rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 p-12 text-center text-white">
+        <div className="rounded-2xl bg-gradient-amazon p-12 text-center text-white">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">
             Ready to Start Shopping?
           </h2>
