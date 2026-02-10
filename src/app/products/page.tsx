@@ -1,117 +1,308 @@
-import { Suspense } from 'react';
-import type { Metadata } from 'next';
-import { ProductGrid } from '@/components/products/product-grid';
-import { ProductGridSkeleton } from '@/components/skeletons/product-grid-skeleton';
-import { FiltersPanel } from '@/components/products/filters/filters-panel';
-import { MobileFiltersDrawer } from '@/components/products/filters/mobile-filters-drawer';
-import { SearchBox } from '@/components/products/search-box';
-import { SortSelect } from '@/components/products/sort-select';
-import { Pagination } from '@/components/ui/pagination';
-import { getProducts, getCategories } from '@/lib/products';
+'use client';
 
-export const metadata: Metadata = {
-    title: 'All Products - ShopHub',
-    description: 'Browse our collection of premium electronics, fashion, and accessories.',
-};
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { ProductGrid } from '@/components/products/ProductGrid';
+import { SearchBar } from '@/components/search/SearchBar';
+import { Loader2, SlidersHorizontal } from 'lucide-react';
 
-interface ProductsPageProps {
-    searchParams: Promise<{
-        q?: string;
-        category?: string;
-        min_price?: string;
-        max_price?: string;
-        is_featured?: string;
-        sort?: 'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
-        page?: string;
-    }>;
+interface Product {
+    id: string;
+    name: string;
+    slug: string;
+    price: number;
+    images: string[];
+    category?: string;
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-    const params = await searchParams;
-    const currentPage = parseInt(params.page || '1', 10);
-    const searchQuery = params.q || '';
-    const categoryId = params.category; // FiltersPanel uses ID now
+interface FilterState {
+    category: string;
+    minPrice: string;
+    maxPrice: string;
+    sortBy: string;
+}
 
-    // Prepare filters
-    const filters = {
-        search: searchQuery,
-        category: categoryId,
-        min_price: params.min_price ? parseInt(params.min_price) : undefined,
-        max_price: params.max_price ? parseInt(params.max_price) : undefined,
-        is_featured: params.is_featured === 'true' ? true : undefined,
-        sort: params.sort,
+export default function ProductsPage() {
+    const searchParams = useSearchParams();
+    const [products, setProducts] = useState<Product[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({
+        category: searchParams.get('category') || '',
+        minPrice: searchParams.get('min_price') || '',
+        maxPrice: searchParams.get('max_price') || '',
+        sortBy: searchParams.get('sort') || 'newest',
+    });
+
+    useEffect(() => {
+        fetchProducts();
+    }, [searchParams]);
+
+    const fetchProducts = async () => {
+        setIsLoading(true);
+        try {
+            const query = searchParams.get('q') || '';
+            const params = new URLSearchParams({
+                ...(query && { q: query }),
+                ...(filters.category && { category: filters.category }),
+                ...(filters.minPrice && { min_price: filters.minPrice }),
+                ...(filters.maxPrice && { max_price: filters.maxPrice }),
+                sort: filters.sortBy,
+            });
+
+            const response = await fetch(`/api/search?${params}`);
+            const data = await response.json();
+
+            if (data.data?.results) {
+                setProducts(
+                    data.data.results.map((item: any) => ({
+                        id: item.id,
+                        name: item.name,
+                        slug: item.slug,
+                        price: item.price,
+                        images: item.images || [],
+                        category: item.category,
+                    }))
+                );
+            }
+        } catch (error) {
+            console.error('Failed to fetch products:', error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const pagination = {
-        page: currentPage,
-        limit: 12,
+    const handleFilterChange = (key: keyof FilterState, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
     };
 
-    // Parallel fetch
-    const [categories, result] = await Promise.all([
-        getCategories(),
-        getProducts(filters, pagination),
-    ]);
+    const applyFilters = () => {
+        const params = new URLSearchParams(searchParams);
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value) params.set(key, value);
+            else params.delete(key);
+        });
+        window.history.pushState({}, '', `?${params.toString()}`);
+        fetchProducts();
+    };
 
-    const activeCategory = categoryId ? categories.find(c => c.id === categoryId) : null;
+    const clearFilters = () => {
+        setFilters({
+            category: '',
+            minPrice: '',
+            maxPrice: '',
+            sortBy: 'newest',
+        });
+        window.history.pushState({}, '', '/products');
+        fetchProducts();
+    };
+
+    const query = searchParams.get('q');
 
     return (
-        <div className="min-h-screen bg-background pb-12">
-            {/* Sticky Sub-Header for Search & Mobile Controls */}
-            <div className="sticky top-16 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container px-4 py-4 md:py-4">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <SearchBox />
-                        <div className="flex items-center gap-2 md:hidden">
-                            <MobileFiltersDrawer categories={categories} />
-                            <div className="flex-1"></div>
-                            <SortSelect />
-                        </div>
-                    </div>
+        <div className="min-h-screen bg-background">
+            {/* Header Section */}
+            <div className="border-b bg-white">
+                <div className="container mx-auto px-4 py-6">
+                    <h1 className="text-3xl font-bold mb-4">
+                        {query ? `Search Results for "${query}"` : 'All Products'}
+                    </h1>
+                    <SearchBar />
                 </div>
             </div>
 
-            <div className="container px-4 py-8">
-                <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+            <div className="container mx-auto px-4 py-8">
+                <div className="flex gap-8">
+                    {/* Sidebar Filters - Desktop */}
+                    <aside className="hidden lg:block w-64 flex-shrink-0">
+                        <div className="sticky top-4 space-y-6">
+                            <h2 className="text-lg font-semibold">Filters</h2>
 
-                    {/* Desktop Sidebar Filters */}
-                    <aside className="hidden w-64 shrink-0 lg:block lg:sticky lg:top-32">
-                        <FiltersPanel categories={categories} />
+                            {/* Category Filter */}
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Category</label>
+                                <select
+                                    value={filters.category}
+                                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                                    className="w-full border rounded-lg px-3 py-2"
+                                >
+                                    <option value="">All Categories</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Fashion">Fashion</option>
+                                    <option value="Home">Home</option>
+                                    <option value="Sports">Sports</option>
+                                </select>
+                            </div>
+
+                            {/* Price Range */}
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Price Range</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="number"
+                                        placeholder="Min"
+                                        value={filters.minPrice}
+                                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                                        className="w-full border rounded-lg px-3 py-2"
+                                    />
+                                    <input
+                                        type="number"
+                                        placeholder="Max"
+                                        value={filters.maxPrice}
+                                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                                        className="w-full border rounded-lg px-3 py-2"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Sort By */}
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Sort By</label>
+                                <select
+                                    value={filters.sortBy}
+                                    onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                                    className="w-full border rounded-lg px-3 py-2"
+                                >
+                                    <option value="newest">Newest First</option>
+                                    <option value="price_asc">Price: Low to High</option>
+                                    <option value="price_desc">Price: High to Low</option>
+                                    <option value="name_asc">Name: A to Z</option>
+                                </select>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="space-y-2">
+                                <button
+                                    onClick={applyFilters}
+                                    className="w-full bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition"
+                                >
+                                    Apply Filters
+                                </button>
+                                <button
+                                    onClick={clearFilters}
+                                    className="w-full border py-2 rounded-lg hover:bg-muted transition"
+                                >
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1">
-                        {/* Desktop Header */}
-                        <div className="mb-6 hidden items-center justify-between lg:flex">
-                            <h1 className="text-2xl font-bold">
-                                {activeCategory ? activeCategory.name : (searchQuery ? `Results for "${searchQuery}"` : 'All Products')}
-                                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                    ({result.total})
-                                </span>
-                            </h1>
-                            <SortSelect />
+                    <div className="flex-1">
+                        {/* Mobile Filter Toggle */}
+                        <div className="lg:hidden mb-4">
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="flex items-center gap-2 border px-4 py-2 rounded-lg w-full justify-center hover:bg-muted transition"
+                            >
+                                <SlidersHorizontal className="h-4 w-4" />
+                                Filters & Sort
+                            </button>
                         </div>
 
-                        {/* Mobile Header (Simplified) */}
-                        <div className="mb-6 lg:hidden">
-                            <h1 className="text-xl font-bold">
-                                {activeCategory ? activeCategory.name : (searchQuery ? `Results for "${searchQuery}"` : 'All Products')}
-                                <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                    ({result.total})
-                                </span>
-                            </h1>
-                        </div>
+                        {/* Mobile Filters Dropdown */}
+                        {showFilters && (
+                            <div className="lg:hidden mb-6 p-4 border rounded-lg space-y-4 bg-white">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Category</label>
+                                    <select
+                                        value={filters.category}
+                                        onChange={(e) => handleFilterChange('category', e.target.value)}
+                                        className="w-full border rounded-lg px-3 py-2"
+                                    >
+                                        <option value="">All Categories</option>
+                                        <option value="Electronics">Electronics</option>
+                                        <option value="Fashion">Fashion</option>
+                                        <option value="Home">Home</option>
+                                        <option value="Sports">Sports</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Price Range</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="number"
+                                            placeholder="Min"
+                                            value={filters.minPrice}
+                                            onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                                            className="w-full border rounded-lg px-3 py-2"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Max"
+                                            value={filters.maxPrice}
+                                            onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                                            className="w-full border rounded-lg px-3 py-2"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Sort By</label>
+                                    <select
+                                        value={filters.sortBy}
+                                        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                                        className="w-full border rounded-lg px-3 py-2"
+                                    >
+                                        <option value="newest">Newest First</option>
+                                        <option value="price_asc">Price: Low to High</option>
+                                        <option value="price_desc">Price: High to Low</option>
+                                        <option value="name_asc">Name: A to Z</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={applyFilters}
+                                        className="flex-1 bg-primary text-white py-2 rounded-lg hover:bg-primary/90 transition"
+                                    >
+                                        Apply
+                                    </button>
+                                    <button
+                                        onClick={clearFilters}
+                                        className="flex-1 border py-2 rounded-lg hover:bg-muted transition"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Results Count */}
+                        {!isLoading && (
+                            <p className="text-sm text-muted-foreground mb-4">
+                                {products.length} {products.length === 1 ? 'product' : 'products'} found
+                            </p>
+                        )}
+
+                        {/* Loading State */}
+                        {isLoading && (
+                            <div className="flex items-center justify-center py-20">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        )}
+
+                        {/* Empty State */}
+                        {!isLoading && products.length === 0 && (
+                            <div className="text-center py-20">
+                                <p className="text-xl font-semibold mb-2">No products found</p>
+                                <p className="text-muted-foreground mb-4">
+                                    Try adjusting your search or filters
+                                </p>
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-primary hover:underline"
+                                >
+                                    Clear all filters
+                                </button>
+                            </div>
+                        )}
 
                         {/* Product Grid */}
-                        <Suspense fallback={<ProductGridSkeleton />}>
-                            <ProductGrid products={result.products} />
-                        </Suspense>
-
-                        {/* Pagination */}
-                        <div className="mt-12">
-                            <Pagination totalPages={result.totalPages} />
-                        </div>
-                    </main>
+                        {!isLoading && products.length > 0 && <ProductGrid products={products} />}
+                    </div>
                 </div>
             </div>
         </div>
