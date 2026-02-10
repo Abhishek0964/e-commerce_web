@@ -8,11 +8,23 @@ import { MobileNavDrawer } from './mobile-nav-drawer';
 import { CartDrawer } from '@/components/cart/cart-drawer';
 import { useCartStore } from '@/store/cart';
 import { useScroll } from '@/hooks/use-scroll';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const { isScrolled } = useScroll(10);
+    const { user, signOut } = useAuth();
+    const router = useRouter();
 
     const toggleDrawer = useCartStore((state) => state.toggleDrawer);
     const items = useCartStore((state) => state.items);
@@ -24,6 +36,11 @@ export function Header() {
     useEffect(() => setMounted(true), []);
 
     const cartCount = mounted ? items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+
+    const handleSignOut = async () => {
+        await signOut();
+        router.push('/login');
+    };
 
     return (
         <>
@@ -86,13 +103,44 @@ export function Header() {
                             )}
                         </button>
 
-                        <Link
-                            href="/profile"
-                            className="text-sm font-medium transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-sm p-2"
-                            aria-label="User profile"
-                        >
-                            <User className="h-5 w-5" aria-hidden="true" />
-                        </Link>
+                        {/* Auth Menu */}
+                        {mounted ? (
+                            user ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                            aria-label="User profile"
+                                        >
+                                            <User className="h-5 w-5" aria-hidden="true" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56">
+                                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/profile">Profile</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link href="/orders">Orders</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 focus:text-red-600">
+                                            Log out
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <Button asChild size="sm" variant="default">
+                                    <Link href="/login">Login</Link>
+                                </Button>
+                            )
+                        ) : (
+                            // Loading/Skeleton state for auth to match height
+                            <div className="h-9 w-16" />
+                        )}
                     </nav>
 
                     {/* Mobile Menu Button - Also needs to toggle cart via drawer? 

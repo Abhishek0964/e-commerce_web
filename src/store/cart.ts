@@ -66,7 +66,7 @@ export const useCartStore = create<CartStore>()(
                         slug: product.slug,
                         name: product.name,
                         price: product.price, // Using current price (ignoring sale logic for simplicity for now, ideally checks sale_price)
-                        image: product.images?.[0]?.url,
+                        image: (product.images as any)?.[0]?.url,
                         quantity: Math.min(quantity, maxStock),
                         maxStock,
                     };

@@ -1,8 +1,6 @@
 'use client';
 
-import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Slider } from '@/components/ui/slider'; // Assuming this exists or using simple inputs
 import { Checkbox } from '@/components/ui/checkbox'; // Assuming exists
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';

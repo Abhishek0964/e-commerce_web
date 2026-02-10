@@ -50,9 +50,14 @@ function ProductCardHoverActions({
                 aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                 className="h-9 w-9"
             >
-                <Heart
-                    className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`}
-                />
+                <motion.div
+                    animate={isWishlisted ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <Heart
+                        className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`}
+                    />
+                </motion.div>
             </Button>
         </motion.div>
     );

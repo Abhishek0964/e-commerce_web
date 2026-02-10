@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { ProductGrid } from '@/components/products/product-grid';
-import { ProductGridSkeleton } from '@/components/products/product-grid';
+import { ProductGridSkeleton } from '@/components/skeletons/product-grid-skeleton';
 import { FiltersPanel } from '@/components/products/filters/filters-panel';
 import { MobileFiltersDrawer } from '@/components/products/filters/mobile-filters-drawer';
 import { SearchBox } from '@/components/products/search-box';

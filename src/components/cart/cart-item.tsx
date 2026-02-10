@@ -6,7 +6,6 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCartStore, type CartItem as CartItemType } from '@/store/cart';
 import { formatPrice } from '@/lib/utils'; // Assuming this exists from my investigation
-import { cn } from '@/lib/utils';
 
 interface CartItemProps {
     item: CartItemType;

@@ -39,7 +39,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     }
 
     const images = (product.images as unknown as ProductImage[]) || [];
-    const inStock = (product.available_stock || 0) > 0;
 
     return (
         <div className="min-h-screen bg-background">

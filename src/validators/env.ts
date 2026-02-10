@@ -2,20 +2,20 @@ import { z } from 'zod';
 
 const envSchema = z.object({
     // Supabase
-    NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
-    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'Supabase service role key is required'),
+    NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL').optional(),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 
     // Razorpay
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().min(1, 'Razorpay key ID is required'),
-    RAZORPAY_KEY_SECRET: z.string().min(1, 'Razorpay key secret is required'),
-    RAZORPAY_WEBHOOK_SECRET: z.string().min(1, 'Razorpay webhook secret is required'),
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
+    RAZORPAY_KEY_SECRET: z.string().optional(),
+    RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
 
     // Application
-    NEXT_PUBLIC_APP_URL: z.string().url('Invalid app URL'),
+    NEXT_PUBLIC_APP_URL: z.string().url('Invalid app URL').optional(),
 
     // Email (Resend)
-    RESEND_API_KEY: z.string().min(1, 'Resend API key is required'),
+    RESEND_API_KEY: z.string().optional(),
 });
 
 // Validate environment variables on startup

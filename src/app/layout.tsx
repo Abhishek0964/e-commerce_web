@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { AuthListener } from "@/components/auth/auth-listener";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +17,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ShopHub - Your E-Commerce Destination",
-  description: "Discover quality products at great prices",
+  title: {
+    template: '%s | ShopHub',
+    default: 'ShopHub - Premium E-Commerce',
+  },
+  description: "Discover quality products at great prices. Electronics, Fashion, Home & Kitchen.",
+  openGraph: {
+    title: 'ShopHub',
+    description: 'Your one-stop shop for premium products.',
+    type: 'website',
+    locale: 'en_IN',
+    siteName: 'ShopHub',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ShopHub',
+    description: 'Premium E-Commerce Store',
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +47,8 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <AuthListener />
+        <Toaster />
       </body>
     </html>
   );

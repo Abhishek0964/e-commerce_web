@@ -1,17 +1,13 @@
 import { createServerClient } from '@supabase/ssr';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import type { Database } from '@/types/database';
+import { env } from '@/lib/env';
 
-/**
- * Create a Supabase client for use in Server Components
- */
 export async function createClient() {
     const cookieStore = await cookies();
 
-    return createServerClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    return createServerClient(
+        env.NEXT_PUBLIC_SUPABASE_URL,
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         {
             cookies: {
                 getAll() {
@@ -33,13 +29,26 @@ export async function createClient() {
     );
 }
 
-/**
- * Create a Supabase admin client with service role key
- * WARNING: Only use this for admin operations on the server
- */
-export function createAdminClient() {
-    return createSupabaseClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+export async function getSession() {
+    const supabase = await createClient();
+    try {
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+        return session;
+    } catch (error) {
+        console.error('Error getting session:', error);
+        return null;
+    }
+}
+
+export async function getUser() {
+    const supabase = await createClient();
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user;
+    } catch (error) {
+        console.error('Error getting user:', error);
+        return null;
+    }
 }

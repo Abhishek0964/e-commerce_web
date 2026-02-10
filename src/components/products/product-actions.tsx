@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { QuantitySelector } from './quantity-selector';
 import { AddToCartButton } from './add-to-cart-button';
 import { useCartStore } from '@/store/cart';
@@ -20,8 +21,7 @@ export function ProductActions({ product }: ProductActionsProps) {
 
     const handleAddToCart = () => {
         addItem(product, quantity);
-        // AddToCartButton handles its own loading animation,
-        // and store handles opening drawer.
+        toast.success(`Added ${quantity} x ${product.name} to cart`);
     };
 
     return (
@@ -49,7 +49,7 @@ export function ProductActions({ product }: ProductActionsProps) {
                 <div className="flex-1">
                     <button
                         className="inline-flex h-12 w-full items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                        onClick={() => console.log('Wishlist clicked:', product.id)}
+                        onClick={() => toast.info("Added to Wishlist (Demo)")}
                     >
                         Add to Wishlist
                     </button>
