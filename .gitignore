@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# additional explicit ignores
+node_modules/
+.env
+.env.local
+.env.*.local
+dist/
+.supabase/
+.agent/
