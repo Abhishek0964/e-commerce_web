@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ProductCard } from './product-card';
 import { ProductCardSkeleton } from './product-card-skeleton';
+import { shouldReduceMotion } from '@/lib/motion-config';
 import type { ProductWithDetails } from '@/types/product';
 
 interface ProductGridProps {
@@ -10,22 +11,26 @@ interface ProductGridProps {
     loading?: boolean;
 }
 
-const container = {
-    hidden: { opacity: 0 },
+const getContainer = (reducedMotion: boolean) => ({
+    hidden: { opacity: reducedMotion ? 1 : 0 },
     show: {
         opacity: 1,
         transition: {
-            staggerChildren: 0.1,
+            staggerChildren: reducedMotion ? 0 : 0.1,
         },
     },
-};
+});
 
-const item = {
-    hidden: { opacity: 0, y: 20 },
+const getItem = (reducedMotion: boolean) => ({
+    hidden: { opacity: reducedMotion ? 1 : 0, y: reducedMotion ? 0 : 20 },
     show: { opacity: 1, y: 0 },
-};
+});
 
 function ProductGrid({ products, loading = false }: ProductGridProps) {
+    const reducedMotion = shouldReduceMotion();
+    const container = getContainer(reducedMotion);
+    const item = getItem(reducedMotion);
+
     if (loading) {
         return (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -2,26 +2,47 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, ShoppingBag } from 'lucide-react';
 import { Button } from '../ui/button';
+import { useCartStore } from '@/store/cart';
+import { toast } from 'sonner';
+import type { ProductWithDetails } from '@/types/product';
 
 interface ProductCardHoverActionsProps {
-    productId: string;
-    productSlug: string;
+    product: ProductWithDetails;
     inStock: boolean;
 }
 
 function ProductCardHoverActions({
-    productId: _productId,
-    productSlug: _productSlug,
+    product,
     inStock,
 }: ProductCardHoverActionsProps) {
     const [isWishlisted, setIsWishlisted] = useState(false);
+    const addItem = useCartStore((state) => state.addItem);
+    const openDrawer = useCartStore((state) => state.openDrawer);
 
     const handleWishlistToggle = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsWishlisted(!isWishlisted);
-        // TODO: Integrate with wishlist store/API
+        toast.success(isWishlisted ? 'Removed from wishlist' : 'Added to wishlist', {
+            description: product.name,
+            duration: 2000,
+        });
+    };
+
+    const handleAddToCart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (!inStock) return;
+
+        addItem(product);
+
+        toast.success('Added to cart', {
+            description: product.name,
+            action: {
+                label: 'View Cart',
+                onClick: () => openDrawer(),
+            },
+        });
     };
 
     return (
@@ -34,13 +55,11 @@ function ProductCardHoverActions({
         >
             <Button
                 size="sm"
-                className="flex-1"
+                className="flex-1 gap-2"
                 disabled={!inStock}
-                onClick={(e) => {
-                    e.preventDefault();
-                    // TODO: Add to cart functionality
-                }}
+                onClick={handleAddToCart}
             >
+                <ShoppingBag className="h-4 w-4" />
                 {inStock ? 'Add to Cart' : 'Out of Stock'}
             </Button>
             <Button

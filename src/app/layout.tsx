@@ -5,7 +5,7 @@ import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AuthListener } from "@/components/auth/auth-listener";
-import { CursorTrailBackground } from "@/components/ui/cursor-reactive-background";
+import { CursorBackground } from "@/components/animations/cursor-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +45,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased relative`}>
-        <CursorTrailBackground />
+        <CursorBackground />
         <div className="relative z-10 flex min-h-screen flex-col">
           <Header />
           <main className="flex-1">{children}</main>

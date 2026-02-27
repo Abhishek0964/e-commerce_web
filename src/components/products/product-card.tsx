@@ -94,8 +94,7 @@ function ProductCard({ product }: ProductCardProps) {
                     <AnimatePresence>
                         {isHovered && (
                             <ProductCardHoverActions
-                                productId={product.id}
-                                productSlug={product.slug}
+                                product={product}
                                 inStock={inStock}
                             />
                         )}

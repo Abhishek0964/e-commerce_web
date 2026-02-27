@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform, useMotionValue, useSpring, useInView }
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ShoppingBag, Truck, Shield, Star } from 'lucide-react';
+import { shouldReduceMotion } from '@/lib/motion-config';
 
 // Floating product card for parallax layers
 function FloatingCard({
@@ -37,6 +38,7 @@ function FloatingCard({
 export function HomeHero() {
     const containerRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(containerRef, { once: true });
+    const reducedMotion = shouldReduceMotion();
 
     const { scrollY } = useScroll();
     const mouseX = useMotionValue(0);
@@ -45,15 +47,17 @@ export function HomeHero() {
     const smoothMouseX = useSpring(mouseX, { damping: 30, stiffness: 100 });
     const smoothMouseY = useSpring(mouseY, { damping: 30, stiffness: 100 });
 
-    // Parallax layers at different speeds
-    const layer1Y = useTransform(scrollY, [0, 500], [0, -60]);
-    const layer2Y = useTransform(scrollY, [0, 500], [0, -120]);
-    const layer3Y = useTransform(scrollY, [0, 500], [0, -180]);
-    const bgY = useTransform(scrollY, [0, 500], [0, -30]);
-    const textOpacity = useTransform(scrollY, [0, 300], [1, 0]);
-    const textScale = useTransform(scrollY, [0, 300], [1, 0.9]);
+    // Parallax layers at different speeds (disabled if reduced motion preferred)
+    const layer1Y = useTransform(scrollY, [0, 500], [0, reducedMotion ? 0 : -60]);
+    const layer2Y = useTransform(scrollY, [0, 500], [0, reducedMotion ? 0 : -120]);
+    const layer3Y = useTransform(scrollY, [0, 500], [0, reducedMotion ? 0 : -180]);
+    const bgY = useTransform(scrollY, [0, 500], [0, reducedMotion ? 0 : -30]);
+    const textOpacity = useTransform(scrollY, [0, 300], [1, reducedMotion ? 1 : 0]);
+    const textScale = useTransform(scrollY, [0, 300], [1, reducedMotion ? 1 : 0.9]);
 
     useEffect(() => {
+        if (reducedMotion) return; // Skip mouse tracking if reduced motion
+
         const handleMouse = (e: MouseEvent) => {
             const container = containerRef.current;
             if (!container) return;
@@ -66,7 +70,7 @@ export function HomeHero() {
 
         window.addEventListener('mousemove', handleMouse);
         return () => window.removeEventListener('mousemove', handleMouse);
-    }, [mouseX, mouseY]);
+    }, [mouseX, mouseY, reducedMotion]);
 
     return (
         <section

@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { CartItem } from './cart-item';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import { shouldReduceMotion } from '@/lib/motion-config';
+
 export function CartList() {
     const items = useCartStore((state) => state.items);
     const closeDrawer = useCartStore((state) => state.closeDrawer);
+    const reducedMotion = shouldReduceMotion();
 
     if (items.length === 0) {
         return (
@@ -34,14 +37,14 @@ export function CartList() {
 
     return (
         <ul className="flex flex-col gap-4 py-4">
-            <AnimatePresence initial={false}>
+            <AnimatePresence initial={false} mode="popLayout">
                 {items.map((item) => (
                     <motion.li
                         key={item.id}
-                        layout
-                        initial={{ opacity: 0, height: 0 }}
+                        layout={!reducedMotion}
+                        initial={reducedMotion ? { opacity: 1 } : { opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
+                        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
                         transition={{ duration: 0.2 }}
                     >
                         <CartItem item={item} />

@@ -68,7 +68,7 @@ test.describe('ShopHub E-commerce - Core User Flows', () => {
 
         // Click on first product
         await page.locator('a[href*="/products/"]').first().click();
-        await page.waitForLoad State('networkidle');
+        await page.waitForLoadState('networkidle');
 
         // Find and click add to cart button
         const addToCartBtn = page.locator('button:has-text("Add to Cart"), button:has-text("Add to Bag")').first();
