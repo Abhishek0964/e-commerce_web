@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ShopHub - Production E-Commerce Platform
 
 A modern, production-grade e-commerce platform built with Next.js, TypeScript, Supabase, and Razorpay. Optimized for the Indian market.
@@ -214,3 +215,6 @@ For issues or questions, contact the development team.
 ---
 
 **Built with ❤️ for the Indian market**
+=======
+# e-commerce_web
+>>>>>>> 02a006a54b55f562d7f304dc230ce481429b7c20
