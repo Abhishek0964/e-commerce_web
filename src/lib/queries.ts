@@ -191,7 +191,7 @@ export async function fetchCartItems(): Promise<CartItem[]> {
     .from('cart_items')
     .select(
       `id, user_id, product_id, variant_id, quantity, created_at,
-       product:${PRODUCT_SELECT},
+       product:products(${PRODUCT_SELECT}),
        variant:product_variants(id, product_id, name, value, sku, price_override, inventory_count)`,
     )
     .order('created_at', { ascending: false });
@@ -222,7 +222,7 @@ export async function removeFromCart(itemId: string): Promise<void> {
 export async function fetchWishlist(): Promise<WishlistItem[]> {
   const { data, error } = await supabase
     .from('wishlist')
-    .select(`id, user_id, product_id, created_at, product:${PRODUCT_SELECT}`)
+    .select(`id, user_id, product_id, created_at, product:products(${PRODUCT_SELECT})`)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as WishlistItem[];
